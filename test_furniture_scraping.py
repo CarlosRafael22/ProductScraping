@@ -7,7 +7,8 @@
  # 3 - Return the data in a list of dictionaries with furniture info
 import requests
 from bs4 import BeautifulSoup
-
+import re
+import pytest
 
 class ParsedPage:
     parsed_html = None
@@ -29,19 +30,42 @@ def retrieve_html_parsed_from_url(query: str) -> BeautifulSoup:
     return soup
 
 
-def get_info_dictionary_about_furniture(parsed_html: BeautifulSoup) -> dict:
+def convert_BRL_currency_to_float(currency_value: str) -> float:
+    # Value is received like this: '1.498,00'
+    float_value = currency_value.replace('.', '/').replace(',', '.').replace('/', '')
+    return float(float_value)
+
+
+def get_info_dictionary_about_furnitures(parsed_html: BeautifulSoup) -> dict:
     grid_items = parsed_html.find_all("div", class_="product-grid-item")
     item = grid_items[0]
     items_list = []
-    # for item in grid_items:
-    price_span = item.find("span", class_="PriceUI-bwhjk3-11 cmTHwB PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ")
-    name_h2 = item.find("h2", class_="TitleUI-bwhjk3-15 khKJTM TitleH2-sc-1wh9e1x-1 gYIWNc")
-    info_dict = {
-        'name': name_h2.get_text(),
-        'price_str': price_span.get_text()
-    }
+    print(len(grid_items))
+
+    # price_span_regex = re.compile('PriceUI-bwhjk3-11.* PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ')
+    for item in grid_items:
+        price_span = item.select('span[class*="PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ"]')[0]
+        # import pdb; pdb.set_trace()
+        # price_span_with_a_mais_tag = item.find("span", class_="PriceUI-bwhjk3-11 cmTHwB PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ")
+        # price_span_with_a_mais_tag = item.find("span", class_="PriceUI-bwhjk3-11 jtJOff PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ")
+        name_h2 = item.find("h2", class_="TitleUI-bwhjk3-15 khKJTM TitleH2-sc-1wh9e1x-1 gYIWNc")
+        name = name_h2.get_text() if name_h2 else 'SEM NOME'
+        price_str = price_span.get_text() if price_span else 'SEM PRECO'
+        if price_span:
+            # Value is received like this: 'R$ 1.498,00'
+            price_str = price_span.get_text() 
+            price = convert_BRL_currency_to_float(price_str[3:])
+        else:
+            price_str = 'SEM PRECO'
+            price = None
+        info_dict = {
+            'name': name,
+            'price_str': price_str,
+            'price': price
+        }
+        items_list.append(info_dict)
     # import pdb; pdb.set_trace()
-    return info_dict
+    return items_list
 
 
 class TestFurnitureRetrieval:
@@ -54,10 +78,21 @@ class TestFurnitureRetrieval:
         assert html_parsed is not None
         assert type(html_parsed) == BeautifulSoup
     
-    def test_should_get_info_dictionary_about_furniture(self):
+    def test_should_get_info_dictionary_about_furnitures(self):
         parsed_html = ParsedPage.parsed_html
-        dictionary = get_info_dictionary_about_furniture(parsed_html)
+        dictionary = get_info_dictionary_about_furnitures(parsed_html)
         import pdb; pdb.set_trace()
-        assert type(dictionary) == dict
+        assert type(dictionary) == list
+    
+    currency_test_data = [
+        ('1.234,78', 1234.78),
+        ('538,90', 538.90),
+        ('34.890,90', 34890.90),
+        ('1,90', 1.90)
+    ]
+    @pytest.mark.parametrize("currency_str,expected_float", currency_test_data)
+    def test_should_convert_BRL_currency_to_float(self, currency_str, expected_float):
+        value = convert_BRL_currency_to_float(currency_str)
+        assert value == expected_float
 
 

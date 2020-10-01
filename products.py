@@ -1,4 +1,4 @@
-# from database import Database
+from database import Database
 
 class Product:
 
@@ -19,7 +19,7 @@ class Product:
         return f'{self.name} - {self.price_str}'
 
 
-class ProductDatabase():
+class ProductDatabase(Database):
     products = []
 
     @classmethod

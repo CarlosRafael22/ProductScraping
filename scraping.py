@@ -7,6 +7,7 @@
 import requests
 from bs4 import BeautifulSoup
 # import re
+from products import Product
 
 class ParsedPage:
     parsed_html = None
@@ -34,7 +35,44 @@ def convert_BRL_currency_to_float(currency_value: str) -> float:
     return float(float_value)
 
 
-def get_info_dictionary_about_furnitures(parsed_html: BeautifulSoup) -> dict:
+def get_info_dict_for_product(item) -> dict:
+    ''' Return a dictionary with main information about the product item passed '''
+
+    price_span = item.select('span[class*="PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ"]')
+    price_span = price_span[0] if len(price_span) else None
+    product_anchor = item.select('a[class*="Link-bwhjk3-2"]')
+    product_anchor = product_anchor[0] if len(product_anchor) else None
+    image = product_anchor.find('img')
+    # price_span_with_a_mais_tag = item.find("span", class_="PriceUI-bwhjk3-11 cmTHwB PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ")
+    # price_span_with_a_mais_tag = item.find("span", class_="PriceUI-bwhjk3-11 jtJOff PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ")
+    name_h2 = item.find("h2", class_="TitleUI-bwhjk3-15 khKJTM TitleH2-sc-1wh9e1x-1 gYIWNc")
+
+    name = name_h2.get_text() if name_h2 else 'SEM NOME'
+    price_str = price_span.get_text() if price_span else 'SEM PRECO'
+    link_url = product_anchor.get('href') if product_anchor else 'SEM LINK'
+    image_url = image.get('src') if image else 'SEM IMAGEM'
+
+    if price_span:
+        # Value is received like this: 'R$ 1.498,00'
+        price_str = price_span.get_text() 
+        price = convert_BRL_currency_to_float(price_str[3:])
+    else:
+        price_str = 'SEM PRECO'
+        price = None
+
+    info_dict = {
+        'name': name,
+        'price_str': price_str,
+        'price': price,
+        'link': link_url,
+        'image_url': image_url
+    }
+    product = Product(info_dict)
+    return info_dict
+
+
+def get_info_list_about_products(parsed_html: BeautifulSoup) -> list:
+    ''' Returns a list with all the information about the products from the given parsed html page '''
     grid_items = parsed_html.find_all("div", class_="product-grid-item")
     item = grid_items[0]
     items_list = []
@@ -42,25 +80,7 @@ def get_info_dictionary_about_furnitures(parsed_html: BeautifulSoup) -> dict:
 
     # price_span_regex = re.compile('PriceUI-bwhjk3-11.* PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ')
     for item in grid_items:
-        price_span = item.select('span[class*="PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ"]')[0]
-        # import pdb; pdb.set_trace()
-        # price_span_with_a_mais_tag = item.find("span", class_="PriceUI-bwhjk3-11 cmTHwB PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ")
-        # price_span_with_a_mais_tag = item.find("span", class_="PriceUI-bwhjk3-11 jtJOff PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ")
-        name_h2 = item.find("h2", class_="TitleUI-bwhjk3-15 khKJTM TitleH2-sc-1wh9e1x-1 gYIWNc")
-        name = name_h2.get_text() if name_h2 else 'SEM NOME'
-        price_str = price_span.get_text() if price_span else 'SEM PRECO'
-        if price_span:
-            # Value is received like this: 'R$ 1.498,00'
-            price_str = price_span.get_text() 
-            price = convert_BRL_currency_to_float(price_str[3:])
-        else:
-            price_str = 'SEM PRECO'
-            price = None
-        info_dict = {
-            'name': name,
-            'price_str': price_str,
-            'price': price
-        }
+        info_dict = get_info_dict_for_product(item)
         items_list.append(info_dict)
     # import pdb; pdb.set_trace()
     return items_list

@@ -46,3 +46,10 @@ class TestFurnitureRetrieval:
         assert type(info_dict) == dict
 
 
+class TestProductStorage:
+    def test_should_store_products_on_json(self):
+        import os
+        # import pdb; pdb.set_trace()
+        store_products_on_json()
+        assert os.path.exists('products.json') == True
+

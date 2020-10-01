@@ -7,7 +7,7 @@
 import requests
 from bs4 import BeautifulSoup
 # import re
-from products import Product
+from products import Product, ProductDatabase
 
 class ParsedPage:
     parsed_html = None
@@ -84,3 +84,12 @@ def get_info_list_about_products(parsed_html: BeautifulSoup) -> list:
         items_list.append(info_dict)
     # import pdb; pdb.set_trace()
     return items_list
+
+
+def store_products_on_json():
+    ''' Dumps the ProductDatabase to a json file '''
+    import json
+
+    all_products = ProductDatabase.products
+    with open('products.json', 'w') as file:
+        json.dump([product.__dict__ for product in all_products], file, indent=4)

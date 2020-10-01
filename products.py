@@ -33,3 +33,7 @@ class ProductDatabase(Database):
     @classmethod
     def add_product(cls, product: Product):
         cls.products.append(product)
+    
+    @classmethod
+    def filter(cls, **kwargs):
+        return Database.filter(cls.products, **kwargs)

@@ -42,19 +42,35 @@ class TestProductDatabase:
         total = ProductDatabase.get_products_total()
         assert total == previous_total + 1
     
+    # def test_should_filter_from_inheritance(self):
+    #     product = create_test_product()
+    #     props = {
+    #         'name': 'Cadeira Escritorio Luxx',
+    #         'price_str': 'R$ 299,99',
+    #         'price': 299.99,
+    #         'link': '/produto/1292680481?pfm_carac=cadeira%20gamer&pfm_index=19&pfm_page=search&pfm_pos=grid&pfm_type=search_page',
+    #         'image_url': None
+    #     }
+    #     product = Product(props)
+    #     previous_total = ProductDatabase.get_products_total()
+    #     # import pdb; pdb.set_trace()
+    #     filtered = ProductDatabase.filter(ProductDatabase.products, price__lt=400)
+    #     assert len(filtered) == 1
+
     def test_should_filter(self):
         product = create_test_product()
         props = {
-            'name': 'Cadeira Escritorio Luxx',
-            'price_str': 'R$ 299,99',
-            'price': 299.99,
+            'name': 'Cadeira Escritorio Luxx Premium',
+            'price_str': 'R$ 599,99',
+            'price': 599.99,
             'link': '/produto/1292680481?pfm_carac=cadeira%20gamer&pfm_index=19&pfm_page=search&pfm_pos=grid&pfm_type=search_page',
             'image_url': None
         }
         product = Product(props)
         previous_total = ProductDatabase.get_products_total()
         # import pdb; pdb.set_trace()
-        filtered = ProductDatabase.filter(ProductDatabase.products, price__lt=400)
+        filtered = ProductDatabase.filter(price__lt=800, price__gte=400)
         assert len(filtered) == 1
+        assert filtered[0].name == product.name
 
 

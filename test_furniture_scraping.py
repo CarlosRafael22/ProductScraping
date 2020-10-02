@@ -3,11 +3,7 @@ import pytest
 from scraping import *
 from products import Product, ProductDatabase
 
-class TestFurnitureRetrieval:
-    def test_should_retrieve_furniture_info_list(self):
-        furniture_list = retrieve_furniture_info_list()
-        assert type(furniture_list) == list
-    
+class TestFurnitureRetrieval:    
     def test_should_retrieve_html_parsed_from_url(self):
         html_parsed = retrieve_html_parsed_from_url('Cadeira gamer')
         assert html_parsed is not None
@@ -15,16 +11,18 @@ class TestFurnitureRetrieval:
     
     def test_should_get_info_list_about_products(self):
         parsed_html = ParsedPage.parsed_html
-        products = get_info_list_about_products(parsed_html)
-        # import pdb; pdb.set_trace()
-        assert type(products) == list
-
-    def test_should_match_get_info_list_about_products_total_with_product_database_total(self):
-        parsed_html = ParsedPage.parsed_html
         previous_total = ProductDatabase.get_products_total()
         products = get_info_list_about_products(parsed_html)
         # import pdb; pdb.set_trace()
+        assert type(products) == list
         assert ProductDatabase.get_products_total() == len(products) + previous_total
+
+    # def test_should_match_get_info_list_about_products_total_with_product_database_total(self):
+    #     parsed_html = ParsedPage.parsed_html
+    #     previous_total = ProductDatabase.get_products_total()
+    #     products = get_info_list_about_products(parsed_html)
+    #     # import pdb; pdb.set_trace()
+    #     assert ProductDatabase.get_products_total() == len(products) + previous_total
     
     currency_test_data = [
         ('1.234,78', 1234.78),
@@ -52,4 +50,11 @@ class TestProductStorage:
         # import pdb; pdb.set_trace()
         store_products_on_json()
         assert os.path.exists('products.json') == True
-
+    
+    def test_should_populate_products_database_from_json_and_return_list(self):
+        ProductDatabase.clear_database()
+        # import pdb; pdb.set_trace()
+        previous_total = ProductDatabase.get_products_total()
+        products_list = populate_products_database_from_json_and_return_list()
+        assert ProductDatabase.get_products_total() == previous_total + len(products_list)
+        assert type(products_list[0]) == Product

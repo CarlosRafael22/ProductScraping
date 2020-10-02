@@ -93,3 +93,22 @@ def store_products_on_json():
     all_products = ProductDatabase.products
     with open('products.json', 'w') as file:
         json.dump([product.__dict__ for product in all_products], file, indent=4)
+
+
+def get_data_from_json():
+    ''' Read JSON file and return its data'''
+    import json
+
+    with open('products.json') as data_file:
+        data_loaded = json.load(data_file)
+    return data_loaded
+
+
+def populate_products_database_from_json_and_return_list():
+    ''' Gets all the data from json file and create Product objects to populate ProrductDatabase '''
+    data_loaded = get_data_from_json()
+    products_list = []
+    for data in data_loaded:
+        print(data)
+        products_list.append(Product(data))
+    return products_list

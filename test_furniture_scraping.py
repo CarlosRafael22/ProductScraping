@@ -59,3 +59,10 @@ class TestProductStorage:
         products_list = populate_products_database_from_json_and_return_list()
         assert ProductDatabase.get_products_total() == previous_total + len(products_list)
         assert type(products_list[0]) == Product
+
+    def test_filter_and_save_products_on_json(self):
+        import os
+
+        filter_and_save_products_on_json(price__lt=800, price__gte=300)
+        assert os.path.exists('filtered_products.json') == True
+

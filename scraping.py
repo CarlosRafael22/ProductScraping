@@ -111,3 +111,10 @@ def populate_products_database_from_json_and_return_list():
         print(data)
         products_list.append(Product(data))
     return products_list
+
+
+def filter_and_save_products_on_json(**kwargs_query):
+    ''' Filter the ProdcutDatabase with the query kwargs passed and save it as JSON in filtered_products.json '''
+    filtered_products = ProductDatabase.filter(**kwargs_query)
+    print(filtered_products)
+    store_products_on_json(filtered_products, 'filtered_products.json')

@@ -48,7 +48,8 @@ class TestProductStorage:
     def test_should_store_products_on_json(self):
         import os
         # import pdb; pdb.set_trace()
-        store_products_on_json()
+        # products = ProductDatabase.products
+        store_products_on_json(ProductDatabase.products, 'products.json')
         assert os.path.exists('products.json') == True
     
     def test_should_populate_products_database_from_json_and_return_list(self):

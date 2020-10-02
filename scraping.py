@@ -86,13 +86,12 @@ def get_info_list_about_products(parsed_html: BeautifulSoup) -> list:
     return items_list
 
 
-def store_products_on_json():
-    ''' Dumps the ProductDatabase to a json file '''
+def store_products_on_json(products, file_name):
+    ''' Dumps the list of products to a json file with file_name '''
     import json
 
-    all_products = ProductDatabase.products
-    with open('products.json', 'w') as file:
-        json.dump([product.__dict__ for product in all_products], file, indent=4)
+    with open(file_name, 'w') as file:
+        json.dump([product.__dict__ for product in products], file, indent=4)
 
 
 def get_data_from_json():

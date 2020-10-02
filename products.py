@@ -37,3 +37,7 @@ class ProductDatabase(Database):
     @classmethod
     def filter(cls, **kwargs):
         return Database.filter(cls.products, **kwargs)
+    
+    @classmethod
+    def clear_database(cls):
+        cls.products = []

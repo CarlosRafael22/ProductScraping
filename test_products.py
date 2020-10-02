@@ -67,10 +67,18 @@ class TestProductDatabase:
             'image_url': None
         }
         product = Product(props)
-        previous_total = ProductDatabase.get_products_total()
+        # previous_total = ProductDatabase.get_products_total()
         # import pdb; pdb.set_trace()
         filtered = ProductDatabase.filter(price__lt=800, price__gte=400)
         assert len(filtered) == 1
         assert filtered[0].name == product.name
+    
+    def test_should_clear_database(self):
+        previous_total = ProductDatabase.get_products_total()
+        assert previous_total != 0
+
+        ProductDatabase.clear_database()
+        assert ProductDatabase.get_products_total() == 0
+        assert ProductDatabase.products == []
 
 

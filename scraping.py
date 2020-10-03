@@ -22,7 +22,9 @@ def retrieve_furniture_info_list():
 
 def retrieve_html_parsed_from_url(query: str) -> BeautifulSoup:
     query_with_hifen = query.lower().replace(' ', '-')
+    query_with_20 = query.lower().replace(' ', '%20')
     url = f'https://www.americanas.com.br/busca/{query_with_hifen}'
+    url = f'https://busca.magazineluiza.com.br/busca?q={query_with_20}'
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
     ParsedPage.parsed_html = soup
@@ -35,21 +37,76 @@ def convert_BRL_currency_to_float(currency_value: str) -> float:
     return float(float_value)
 
 
+# def get_info_dict_for_product(item) -> dict:
+#     ''' Return a dictionary with main information about the product item passed '''
+
+#     price_span = item.select('span[class*="PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ"]')
+#     price_span = price_span[0] if len(price_span) else None
+#     product_anchor = item.select('a[class*="Link-bwhjk3-2"]')
+#     product_anchor = product_anchor[0] if len(product_anchor) else None
+#     image = product_anchor.find('img')
+#     # price_span_with_a_mais_tag = item.find("span", class_="PriceUI-bwhjk3-11 cmTHwB PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ")
+#     # price_span_with_a_mais_tag = item.find("span", class_="PriceUI-bwhjk3-11 jtJOff PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ")
+#     name_h2 = item.find("h2", class_="TitleUI-bwhjk3-15 khKJTM TitleH2-sc-1wh9e1x-1 gYIWNc")
+
+#     name = name_h2.get_text() if name_h2 else 'SEM NOME'
+#     price_str = price_span.get_text() if price_span else 'SEM PRECO'
+#     link_url = product_anchor.get('href') if product_anchor else 'SEM LINK'
+#     image_url = image.get('src') if image else 'SEM IMAGEM'
+
+#     if price_span:
+#         # Value is received like this: 'R$ 1.498,00'
+#         price_str = price_span.get_text() 
+#         price = convert_BRL_currency_to_float(price_str[3:])
+#     else:
+#         price_str = 'SEM PRECO'
+#         price = None
+
+#     info_dict = {
+#         'name': name,
+#         'price_str': price_str,
+#         'price': price,
+#         'link': link_url,
+#         'image_url': image_url
+#     }
+#     product = Product(info_dict)
+#     return info_dict
+
+
 def get_info_dict_for_product(item) -> dict:
     ''' Return a dictionary with main information about the product item passed '''
+    price_extractor = '{}[class*="{}"]'.format(*get_extractor_tag_and_class_tuple('magazine_luiza', 'price'))
+    link_extractor = '{}[class*="{}"]'.format(*get_extractor_tag_and_class_tuple('magazine_luiza', 'link'))
+    name_extractor = '{}[class*="{}"]'.format(*get_extractor_tag_and_class_tuple('magazine_luiza', 'name'))
+    image_extractor = '{}[class*="{}"]'.format(*get_extractor_tag_and_class_tuple('magazine_luiza', 'image'))
+    # price_extractor = '{}[class*="{}"]'.format(get_extractor_tag_and_class_tuple('magazine_luiza', 'price'))
+    # import pdb; pdb.set_trace()
 
-    price_span = item.select('span[class*="PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ"]')
+    price_span = item.select(price_extractor)
     price_span = price_span[0] if len(price_span) else None
-    product_anchor = item.select('a[class*="Link-bwhjk3-2"]')
-    product_anchor = product_anchor[0] if len(product_anchor) else None
-    image = product_anchor.find('img')
-    # price_span_with_a_mais_tag = item.find("span", class_="PriceUI-bwhjk3-11 cmTHwB PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ")
-    # price_span_with_a_mais_tag = item.find("span", class_="PriceUI-bwhjk3-11 jtJOff PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ")
-    name_h2 = item.find("h2", class_="TitleUI-bwhjk3-15 khKJTM TitleH2-sc-1wh9e1x-1 gYIWNc")
+
+    # product_anchor = item.select(link_extractor)
+    # product_anchor = product_anchor[0] if len(product_anchor) else None
+
+    # image = product_anchor.find('img')
+    img_tag, img_class = get_extractor_tag_and_class_tuple('magazine_luiza', 'image')
+    image = item.find(img_tag, class_=img_class)
+
+    name_tag, name_class = get_extractor_tag_and_class_tuple('magazine_luiza', 'name')
+    name_h2 = item.find(name_tag, class_=name_class)
+
+    link_tag, link_class = get_extractor_tag_and_class_tuple('magazine_luiza', 'link')
+    link = item.find(link_tag, class_=link_class)
+
+    price_tag, price_class = get_extractor_tag_and_class_tuple('magazine_luiza', 'price')
+    price_str = item.find(price_tag, class_=price_class)
+    # name_h2 = item.find("h2", class_="TitleUI-bwhjk3-15 khKJTM TitleH2-sc-1wh9e1x-1 gYIWNc")
+    # name_h2 = item.select(name_extractor)
+    # name_h2 = name_h2[0] if len(name_h2) else None
 
     name = name_h2.get_text() if name_h2 else 'SEM NOME'
     price_str = price_span.get_text() if price_span else 'SEM PRECO'
-    link_url = product_anchor.get('href') if product_anchor else 'SEM LINK'
+    link_url = link.get('href') if link else 'SEM LINK'
     image_url = image.get('src') if image else 'SEM IMAGEM'
 
     if price_span:
@@ -67,15 +124,33 @@ def get_info_dict_for_product(item) -> dict:
         'link': link_url,
         'image_url': image_url
     }
-    product = Product(info_dict)
+    Product(info_dict)
     return info_dict
+
+
+STORES_PRODUCTS_PATHS = {
+    'magazine_luiza': {
+        'items': ('li', 'nm-product-item'),
+        'price': ('div', 'nm-price-container'),
+        'name': ('h2', 'nm-product-name'),
+        'link': ('a', 'nm-product-item-container'),
+        'image': ('img', 'nm-product-img')
+    }
+}
+
+
+def get_extractor_tag_and_class_tuple(company, item_to_be_extracted):
+    return STORES_PRODUCTS_PATHS[company][item_to_be_extracted]
 
 
 def get_info_list_about_products(parsed_html: BeautifulSoup) -> list:
     ''' Returns a list with all the information about the products from the given parsed html page '''
-    grid_items = parsed_html.find_all("div", class_="product-grid-item")
-    item = grid_items[0]
+    grid_items = parsed_html.find_all(
+        STORES_PRODUCTS_PATHS['magazine_luiza']['items'][0],
+        class_=STORES_PRODUCTS_PATHS['magazine_luiza']['items'][1])
+    # grid_items = parsed_html.find_all("div", class_="product-grid-item")
     items_list = []
+    # import pdb; pdb.set_trace()
     print(len(grid_items))
 
     # price_span_regex = re.compile('PriceUI-bwhjk3-11.* PriceUI-sc-1q8ynzz-0 dHyYVS TextUI-sc-12tokcy-0 bLZSPZ')

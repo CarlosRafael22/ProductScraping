@@ -16,3 +16,11 @@ class TestPageExtractor:
         extractor = PageExtractor(store)
         tag_and_class = extractor.get_tag_and_class_for_info(item)
         assert tag_and_class == expected_tuple
+    
+    @pytest.mark.parametrize("store,query,expected_url",[
+        ('magazineluiza', 'Cadeira escritorio', 'https://busca.magazineluiza.com.br/busca?q=cadeira%20escritorio'),
+        ('americanas', 'Cadeira escritorio', 'https://www.americanas.com.br/busca/cadeira-escritorio'),
+    ])
+    def test_should_get_search_url(self, store, query, expected_url):
+        extractor = PageExtractor(store)
+        assert extractor.get_search_url(query) == expected_url

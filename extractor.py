@@ -41,9 +41,18 @@ class PageExtractor:
         # return self.STORES_PRODUCTS_PATHS[self.store_id][item_to_be_extracted]
 
     def get_search_url(self, query):
-        parsed_query = {
-            'magazineluiza': query.lower().replace(' ', '%20'),
-            'americanas': query.lower().replace(' ', '-')
-        }[self.store_id]
+        # This way each func is already executed when creating the dict
+        # {'magazineluiza': 'cadeira%20escritorio', 'americanas': 'cadeira-escritorio'}
+        # func_dict = {
+        #     'magazineluiza': query.lower().replace(' ', '%20'),
+        #     'americanas': query.lower().replace(' ', '-')
+        # }
+
+        # This way it only calls the func when its going to use it
+        func_dict = {
+            'magazineluiza': lambda query: query.lower().replace(' ', '%20'),
+            'americanas': lambda query: query.lower().replace(' ', '-')
+        }
+        parsed_query = func_dict[self.store_id](query)
 
         return self.STORES_BASE_URLS[self.store_id]+parsed_query

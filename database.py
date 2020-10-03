@@ -15,7 +15,7 @@ class Database():
     
     @staticmethod
     def filter_gte(attribute, value, list_to_filter):
-            return list(filter(lambda x: getattr(x, attribute) >= value, list_to_filter))
+            return list(filter(lambda x: (getattr(x, attribute, 0) or 0) >= value, list_to_filter))
 
     @staticmethod
     def filter_equals(attribute, value, list_to_filter):
@@ -23,11 +23,11 @@ class Database():
     
     @staticmethod
     def filter_lt(attribute, value, list_to_filter):
-        return list(filter(lambda x: getattr(x, attribute) < value, list_to_filter))
+        return list(filter(lambda x: (getattr(x, attribute, 0) or 0) < value, list_to_filter))
     
     @staticmethod
     def filter_contains(attribute, value, list_to_filter):
-        return list(filter(lambda x: value in getattr(x, attribute), list_to_filter))
+        return list(filter(lambda x: value in (getattr(x, attribute, '') or ''), list_to_filter))
 
     @classmethod
     def filter(cls, objects, **kwargs):

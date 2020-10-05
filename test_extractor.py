@@ -65,11 +65,11 @@ class TestPageExtractor:
         assert item['link'] is not None
 
     @pytest.mark.parametrize("store,query",[
-        # ('magazineluiza', 'Cadeira escritorio'),
+        ('magazineluiza', 'Cadeira escritorio'),
         ('americanas', 'Cadeira escritorio'),
     ])
     def test_should_get_info_list_about_products(self, store, query):
-        previous_product_total = ProductDatabase.get_products_total()
+        # previous_product_total = ProductDatabase.get_products_total()
 
         extractor = PageExtractor(store)
         parsed_html = extractor.retrieve_html_parsed_from_query(query)
@@ -77,5 +77,40 @@ class TestPageExtractor:
 
         # import pdb; pdb.set_trace()
         assert type(items_list) == list
-        assert len(items_list) == ProductDatabase.get_products_total() - previous_product_total
+        # assert len(items_list) == ProductDatabase.get_products_total() - previous_product_total
+        # assert type(parsed_list[0]) == BeautifulSoup
+
+    @pytest.mark.parametrize("store,query",[
+        ('magazineluiza', 'Cadeira escritorio'),
+        ('americanas', 'Cadeira escritorio'),
+    ])
+    def test_should_retrieve_products_from_query(self, store, query):
+        ProductDatabase.clear_database()
+
+        extractor = PageExtractor(store)
+        products_list = extractor.retrieve_products_from_query(query)
+
+        # import pdb; pdb.set_trace()
+        assert type(products_list) == list
+        assert len(products_list) == ProductDatabase.get_products_total()
+        # assert len(items_list) == ProductDatabase.get_products_total() - previous_product_total
+        # assert type(parsed_list[0]) == BeautifulSoup
+
+    @pytest.mark.parametrize("store,query",[
+        ('magazineluiza', 'Cadeira escritorio'),
+        # ('americanas', 'Cadeira escritorio'),
+    ])
+    def test_should_store_products_on_json(self, store, query):
+        import os
+        ProductDatabase.clear_database()
+        filename = 'test.json'
+
+        extractor = PageExtractor(store)
+        products_list = extractor.retrieve_products_from_query(query)
+        extractor.store_products_on_json(products_list, filename)
+
+        # import pdb; pdb.set_trace()
+        assert os.path.exists(filename) == True
+        assert len(products_list) == ProductDatabase.get_products_total()
+        # assert len(items_list) == ProductDatabase.get_products_total() - previous_product_total
         # assert type(parsed_list[0]) == BeautifulSoup

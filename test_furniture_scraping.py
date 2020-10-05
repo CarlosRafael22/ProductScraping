@@ -5,7 +5,7 @@ from products import Product, ProductDatabase
 
 class TestFurnitureRetrieval:    
     def test_should_retrieve_html_parsed_from_url(self):
-        html_parsed = retrieve_html_parsed_from_url('Cadeira gamer')
+        html_parsed = retrieve_html_parsed_from_url('Cadeira escritorio')
         assert html_parsed is not None
         assert type(html_parsed) == BeautifulSoup
     
@@ -35,13 +35,13 @@ class TestFurnitureRetrieval:
         value = convert_BRL_currency_to_float(currency_str)
         assert value == expected_float
     
-    def test_should_get_info_dict_for_product(self):
-        parsed_html = ParsedPage.parsed_html
-        grid_items = parsed_html.find_all("div", class_="product-grid-item")
-        item = grid_items[0]
-        # import pdb; pdb.set_trace()
-        info_dict = get_info_dict_for_product(item)
-        assert type(info_dict) == dict
+    # def test_should_get_info_dict_for_product(self):
+    #     parsed_html = ParsedPage.parsed_html
+    #     grid_items = parsed_html.find_all("div", class_="product-grid-item")
+    #     item = grid_items[0]
+    #     # import pdb; pdb.set_trace()
+    #     info_dict = get_info_dict_for_product(item)
+    #     assert type(info_dict) == dict
 
 
 class TestProductStorage:

@@ -72,23 +72,6 @@ class PageExtractor:
         # Saving it to the parsed_html variable
         self.parsed_html = soup
         return soup
-
-    def get_items_list_from_parsed_html(self, parsed_html: BeautifulSoup) -> element.ResultSet:
-        ''' Returns a list with all the items to be extracted from the given parsed html page '''
-        tag, html_class = self.get_tag_and_class_for_info('items')
-        grid_items = parsed_html.find_all(tag, class_=html_class)
-        return grid_items
-
-    def get_info_list_about_products(self, parsed_html: BeautifulSoup) -> list:
-        ''' Returns a list with all the information about the products from the given parsed html page '''
-        grid_items = self.get_items_list_from_parsed_html(parsed_html)
-        items_list = []
-        print(len(grid_items))
-
-        for item in grid_items:
-            info_dict = self.get_info_dict_for_product(item)
-            items_list.append(info_dict)
-        return items_list
     
     def get_info_dict_for_product(self, item) -> dict:
         ''' Return a dictionary with main information about the product item passed '''
@@ -111,7 +94,7 @@ class PageExtractor:
         # name_h2 = name_h2[0] if len(name_h2) else None
         # import pdb; pdb.set_trace()
 
-        name = name_h2.get_text() if name_h2 else 'SEM NOME'
+        name = name_h2.get_text().strip() if name_h2 else 'SEM NOME'
         # price_str = price_span.get_text() if price_span else 'SEM PRECO'
         link_url = link.get('href') if link else 'SEM LINK'
         image_url = image.get('src') if image else 'SEM IMAGEM'
@@ -131,11 +114,44 @@ class PageExtractor:
             'link': link_url,
             'image_url': image_url
         }
-        Product(info_dict)
+        # Product(info_dict)
         return info_dict
+
+    def get_items_list_from_parsed_html(self, parsed_html: BeautifulSoup) -> element.ResultSet:
+        ''' Returns a list with all the items to be extracted from the given parsed html page '''
+        tag, html_class = self.get_tag_and_class_for_info('items')
+        grid_items = parsed_html.find_all(tag, class_=html_class)
+        return grid_items
+
+    def get_info_list_about_products(self, parsed_html: BeautifulSoup) -> list:
+        ''' Returns a list with all the information about the products from the given parsed html page '''
+        grid_items = self.get_items_list_from_parsed_html(parsed_html)
+        items_list = []
+        print(len(grid_items))
+
+        for item in grid_items:
+            info_dict = self.get_info_dict_for_product(item)
+            items_list.append(info_dict)
+        return items_list
     
     @staticmethod
     def convert_BRL_currency_to_float(currency_value: str) -> float:
         # Value is received like this: '1.498,00'
         float_value = currency_value.replace('.', '/').replace(',', '.').replace('/', '')
         return float(float_value)
+
+    def retrieve_products_from_query(self, query: str) -> list:
+        ''' Returns a list of Product objects from the extracted data got when searching for the given query in the instance e-commerce website '''
+        parsed_html = self.retrieve_html_parsed_from_query(query)
+        items_dicts_list = self.get_info_list_about_products(parsed_html)
+
+        products = [Product(item_attrs) for item_attrs in items_dicts_list]
+        return products
+
+    @classmethod
+    def store_products_on_json(cls, products, file_name):
+        ''' Dumps the list of products to a json file with file_name '''
+        import json
+
+        with open(file_name, 'w') as file:
+            json.dump([product.__dict__ for product in products], file, indent=4)

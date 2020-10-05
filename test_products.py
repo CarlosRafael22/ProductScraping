@@ -33,10 +33,10 @@ class TestProduct:
 
 class TestProductDatabase:
     def test_should_add_product(self):
+        ProductDatabase.clear_database()
         product = create_test_product()
         # import pdb; pdb.set_trace()
         previous_total = ProductDatabase.get_products_total()
-        assert previous_total == 2
 
         ProductDatabase.add_product(product)
         total = ProductDatabase.get_products_total()
@@ -58,6 +58,7 @@ class TestProductDatabase:
     #     assert len(filtered) == 1
 
     def test_should_filter(self):
+        ProductDatabase.clear_database()
         product = create_test_product()
         props = {
             'name': 'Cadeira Escritorio Luxx Premium',

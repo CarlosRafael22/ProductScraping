@@ -1,7 +1,13 @@
-from typing import Tuple
+from typing import Tuple, List
 import requests
+import re
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup, element
 from products import Product
+
+
+PATH = 'C:\\Users\\carlo\\Documents\\ESTUDOS\\chromedriver.exe'
 
 
 class PageExtractor:
@@ -9,24 +15,45 @@ class PageExtractor:
 
     STORES_PRODUCTS_PATHS = {
         'magazineluiza': {
+            'search_field_id': 'inpHeaderSearch',
             'items': ('li', 'nm-product-item'),
             'price': ('div', 'nm-price-container'),
             'name': ('h2', 'nm-product-name'),
             'link': ('a', 'nm-product-item-container'),
             'image': ('img', 'nm-product-img')
         },
+        'magazineluiza2': {
+            'search_field_id': 'inpHeaderSearch',
+            'items': ('li', 'product'),
+            'price': ('span', 'price'),
+            'name': ('h3', 'productTitle'),
+            'link': ('a', 'product-li'),
+            'image': ('img', 'product-image')
+        },
         'americanas': {
+            'search_field_id': 'inpHeaderSearch',
             'items': ('div', 'product-grid-item'),
             'price': ('span', 'PriceUI'),
-            'name': ('h2', 'TitleUI-bwhjk3-15 khKJTM TitleH2-sc-1wh9e1x-1 gYIWNc'),
-            'link': ('a', 'Link-bwhjk3-2'),
-            'image': ('img', 'nm-product-img')
+            'name': ('h2', 'TitleUI'),
+            'link': ('a', 'Link'),
+            # 'image': ('img', 'nm-product-img'),
+            'image': ('img', 'ImageUI')
+        },
+        'submarino': {
+            'search_field_id': 'inpHeaderSearch',
+            'items': ('div', 'product-grid-item'),
+            'price': ('span', 'PriceUI'),
+            'name': ('h2', 'TitleUI'),
+            'link': ('a', 'Link'),
+            # 'image': ('img', 'nm-product-img'),
+            'image': ('img', 'ImageUI')
         }
     }
 
     STORES_BASE_URLS = {
         'magazineluiza': 'https://busca.magazineluiza.com.br/busca?q=',
-        'americanas': 'https://www.americanas.com.br/busca/'
+        'americanas': 'https://www.americanas.com.br/busca/',
+        'submarino': 'https://www.submarino.com.br/busca/',
     }
 
     # Will store the BeautifulSoup parsed from the search query when calling retrieve_html_parsed_from_query
@@ -34,6 +61,74 @@ class PageExtractor:
 
     def __init__(self, store_id):
         self.store_id = store_id
+
+    def query_webdriver(self, query):
+        import time
+        from selenium.webdriver.common.by import By
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
+
+        driver = webdriver.Chrome(PATH)
+        driver.get(self.get_search_url(query))
+        # search = driver.find_element_by_id('inpHeaderSearch')
+        # search.send_keys(query + Keys.RETURN)
+
+        if 'magazineluiza' in self.store_id:
+            try:
+                page = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, "productShowCaseContent"))
+                )
+                self.store_id = 'magazineluiza2'
+                print('FOI NO PRIMEIRO')
+            except Exception as excp:
+                # import pdb; pdb.set_trace()
+                print('DEU ERRO NO PRIMEIRO')
+                try:
+                    page = WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR, ".neemu-products-container.nm-view-type-grid.five-products.priceapi-finish"))
+                    )
+                    self.store_id = 'magazineluiza'
+                    print('FOI NO SEGUNDO')
+                except Exception as excp2:
+                    # import pdb; pdb.set_trace()
+                    print('DEU ERRO NO SEGUNDO')
+                    try:
+                        page = WebDriverWait(driver, 10).until(
+                            EC.presence_of_element_located((By.ID, "main-title"))
+                        )
+                    except Exception as excp3:
+                        import pdb; pdb.set_trace()
+                        driver.quit()
+            finally:
+                soup = BeautifulSoup(driver.page_source, 'html.parser')
+                products = self.get_info_list_about_products(soup)
+                return products
+        elif 'americanas' in self.store_id or 'submarino' in self.store_id:
+            try:
+                page = WebDriverWait(driver, 20).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, ".row.product-grid.no-gutters.main-grid"))
+                )
+                print('FOI NO PRIMEIRO')
+            except Exception as excp:
+                import pdb; pdb.set_trace()
+                print('DEU ERRO NO PRIMEIRO')
+                import pdb; pdb.set_trace()
+                driver.quit()
+            finally:
+                # import pdb; pdb.set_trace()
+                all_items = driver.find_elements_by_class_name('product-grid-item')
+                iter_idx = 0
+                while iter_idx < len(all_items):
+                    driver.execute_script("arguments[0].scrollIntoView()", all_items[iter_idx])
+                    iter_idx += 1
+                # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(5)
+                soup = BeautifulSoup(driver.page_source, 'html.parser')
+                products = self.get_info_list_about_products(soup)
+                return products
+
+    # def query_for_all_stores(self, query: str) -> List[Product]:
+    #     ''' Uses the query_webdriver method to query all stores listed in PageExtractor and returns all the products '''
     
     def get_tag_and_class_for_info(self, item_to_be_extracted: str) -> Tuple[str,str]:
         paths = self.STORES_PRODUCTS_PATHS.get(self.store_id, None)
@@ -57,7 +152,8 @@ class PageExtractor:
         # This way it only calls the func when its going to use it
         func_dict = {
             'magazineluiza': lambda query: query.lower().replace(' ', '%20'),
-            'americanas': lambda query: query.lower().replace(' ', '-')
+            'americanas': lambda query: query.lower().replace(' ', '-'),
+            'submarino': lambda query: query.lower().replace(' ', '-')
         }
         parsed_query = func_dict[self.store_id](query)
 
@@ -75,16 +171,23 @@ class PageExtractor:
     
     def get_info_dict_for_product(self, item) -> dict:
         ''' Return a dictionary with main information about the product item passed '''
-        import re
         # image = product_anchor.find('img')
         img_tag, img_class = self.get_tag_and_class_for_info('image')
-        image = item.find(img_tag, class_=img_class)
+        # image = item.find(img_tag, class_=img_class)
+        regex = re.compile('.*'+img_class+'.*')
+        image = item.find(img_tag, { 'class': regex })
+        # if not image:
+        #     import pdb; pdb.set_trace()
 
         name_tag, name_class = self.get_tag_and_class_for_info('name')
-        name_h2 = item.find(name_tag, class_=name_class)
+        # name_h2 = item.find(name_tag, class_=name_class)
+        regex = re.compile('.*'+name_class+'.*')
+        name_h2 = item.find(name_tag, { 'class': regex })
 
         link_tag, link_class = self.get_tag_and_class_for_info('link')
-        link = item.find(link_tag, class_=link_class)
+        # link = item.find(link_tag, class_=link_class)
+        regex = re.compile('.*'+link_class+'.*')
+        link = item.find(link_tag, { 'class': regex })
 
         price_tag, price_class = self.get_tag_and_class_for_info('price')
         regex = re.compile('.*'+price_class+'.*')
@@ -102,7 +205,7 @@ class PageExtractor:
         if price_str:
             # Value is received like this: 'R$ 1.498,00'
             price_str = price_str.get_text() 
-            price = PageExtractor.convert_BRL_currency_to_float(price_str[3:])
+            price = PageExtractor.convert_BRL_currency_to_float(price_str)
         else:
             price_str = 'SEM PRECO'
             price = None
@@ -112,7 +215,8 @@ class PageExtractor:
             'price_str': price_str,
             'price': price,
             'link': link_url,
-            'image_url': image_url
+            'image_url': image_url,
+            'store': self.store_id
         }
         # Product(info_dict)
         return info_dict
@@ -136,8 +240,12 @@ class PageExtractor:
     
     @staticmethod
     def convert_BRL_currency_to_float(currency_value: str) -> float:
-        # Value is received like this: '1.498,00'
-        float_value = currency_value.replace('.', '/').replace(',', '.').replace('/', '')
+        # Value is received like this: 'R$ 1.498,00' 'R$ 538,90 à vista' 'Desconto de R$ 1,90'
+        currency_value = currency_value.strip().split('R$')[1]
+        float_value = currency_value.strip().replace('.', '/').replace(',', '.').replace('/', '')
+        # It can also come as '3480.00 à vista'
+        if 'à vista' in float_value:
+            float_value = float_value.split(' à vista')[0]
         return float(float_value)
 
     def retrieve_products_from_query(self, query: str) -> list:

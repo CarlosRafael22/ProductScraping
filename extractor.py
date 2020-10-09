@@ -9,9 +9,39 @@ from products import Product
 
 PATH = 'C:\\Users\\carlo\\Documents\\ESTUDOS\\chromedriver.exe'
 
+class DataRetriever:
+    ''' Class that uses multiple PageExtractors to retrieve data queried from different websites '''
+
+    @classmethod
+    def query_for(cls, query: str) -> List:
+        # Execute this query in as many websites there are in STORES_BASE_URLS
+        websites_to_query = [*PageExtractor.STORES_BASE_URLS]
+        objects_retrieved = []
+        # import pdb; pdb.set_trace()
+        for website in websites_to_query:
+            website_objects = PageExtractor(website).query_webdriver(query)
+            print(len(website_objects))
+            objects_retrieved = objects_retrieved + website_objects
+        return objects_retrieved
+
+    @classmethod
+    def store_products_on_json(cls, products, file_name):
+        ''' Dumps the list of products to a json file with file_name '''
+        import json
+
+        with open(file_name, 'w') as file:
+            json.dump([product.__dict__ for product in products], file, indent=4)
+
+
 
 class PageExtractor:
     '''Class used to make it easier to extract data from previously known e-commerce website'''
+
+    STORES_BASE_URLS = {
+        'magazineluiza': 'https://busca.magazineluiza.com.br/busca?q=',
+        # 'americanas': 'https://www.americanas.com.br/busca/',
+        'submarino': 'https://www.submarino.com.br/busca/',
+    }
 
     STORES_PRODUCTS_PATHS = {
         'magazineluiza': {
@@ -48,12 +78,6 @@ class PageExtractor:
             # 'image': ('img', 'nm-product-img'),
             'image': ('img', 'ImageUI')
         }
-    }
-
-    STORES_BASE_URLS = {
-        'magazineluiza': 'https://busca.magazineluiza.com.br/busca?q=',
-        'americanas': 'https://www.americanas.com.br/busca/',
-        'submarino': 'https://www.submarino.com.br/busca/',
     }
 
     # Will store the BeautifulSoup parsed from the search query when calling retrieve_html_parsed_from_query
@@ -126,9 +150,6 @@ class PageExtractor:
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
                 products = self.get_info_list_about_products(soup)
                 return products
-
-    # def query_for_all_stores(self, query: str) -> List[Product]:
-    #     ''' Uses the query_webdriver method to query all stores listed in PageExtractor and returns all the products '''
     
     def get_tag_and_class_for_info(self, item_to_be_extracted: str) -> Tuple[str,str]:
         paths = self.STORES_PRODUCTS_PATHS.get(self.store_id, None)

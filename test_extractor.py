@@ -1,7 +1,7 @@
 import pytest
 from bs4 import BeautifulSoup, element
-from extractor import PageExtractor
-from products import ProductDatabase
+from extractor import PageExtractor, DataRetriever
+from products import ProductDatabase, Product
 
 
 test_store_query_data = [
@@ -137,3 +137,16 @@ class TestPageExtractor:
         # import pdb; pdb.set_trace()
         assert os.path.exists(filename) == True
         assert len(products_list) == ProductDatabase.get_products_total()
+
+
+class TestDataRetriever:
+    def test_should_query_for(self):
+        products_dicts = DataRetriever.query_for('iphone')
+        # import pdb; pdb.set_trace()
+        products = [Product(item_attrs) for item_attrs in products_dicts]
+        DataRetriever.store_products_on_json(products, 'test.json')
+        # import pdb; pdb.set_trace()
+        filtered_products = ProductDatabase.filter(price__gte=3000, price__lt=4000)
+        DataRetriever.store_products_on_json(filtered_products, 'test_filtered.json')
+        assert type(products_dicts) == list
+        assert type(products_dicts[0]) == dict

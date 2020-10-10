@@ -150,3 +150,8 @@ class TestDataRetriever:
         DataRetriever.store_products_on_json(filtered_products, 'test_filtered.json')
         assert type(products_dicts) == list
         assert type(products_dicts[0]) == dict
+    
+    def test_should_get_products_from_json(self):
+        products = DataRetriever.get_products_from_json('test.json')
+        assert len(products) == len(ProductDatabase.products)
+        assert products[0] == ProductDatabase.products[0]

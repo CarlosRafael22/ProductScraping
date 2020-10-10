@@ -32,6 +32,19 @@ class DataRetriever:
         with open(file_name, 'w') as file:
             json.dump([product.__dict__ for product in products], file, indent=4)
 
+    @classmethod
+    def get_products_from_json(cls, file_name: str) -> List[Product]:
+        ''' Dumps the list of products to a json file with file_name '''
+        import json
+
+        products = []
+        with open(file_name) as data_file:
+            data_loaded = json.load(data_file)
+            for data in data_loaded:
+                products.append(Product(data))
+
+        return products
+
 
 
 class PageExtractor:

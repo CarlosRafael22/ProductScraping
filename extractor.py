@@ -174,6 +174,21 @@ class PageExtractor:
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
                 products = self.get_info_list_about_products(soup)
                 return products
+        elif 'casasbahia' in self.store_id:
+            try:
+                page = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, ".ProductsGrid__ProductsGridWrapper-yqpqna-0.joXYON"))
+                )
+                print('FOI NO SEGUNDO')
+            except Exception:
+                print('DEU ERRO NO SEGUNDO')
+                import pdb; pdb.set_trace()
+                driver.quit()
+            finally:
+                # import pdb; pdb.set_trace()
+                soup = BeautifulSoup(driver.page_source, 'html.parser')
+                products = self.get_info_list_about_products(soup)
+                return products
     
     def get_tag_and_class_for_info(self, item_to_be_extracted: str) -> Tuple[str,str]:
         paths = self.STORES_PRODUCTS_PATHS.get(self.store_id, None)

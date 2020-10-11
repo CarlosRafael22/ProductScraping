@@ -8,6 +8,7 @@ test_store_query_data = [
     ('magazineluiza', 'Cadeira escritorio'),
     # ('americanas', 'Cadeira escritorio'),
     ('submarino', 'Cadeira escritorio'),
+    ('casasbahia', 'Cadeira escritorio'),
 ]
 
 class TestPageExtractor:
@@ -83,7 +84,6 @@ class TestPageExtractor:
         extractor = PageExtractor(store)
         products_list = extractor.retrieve_products_from_query(query)
 
-        # import pdb; pdb.set_trace()
         assert type(products_list) == list
         assert len(products_list) == ProductDatabase.get_products_total()
         # assert len(items_list) == ProductDatabase.get_products_total() - previous_product_total
@@ -116,19 +116,19 @@ class TestPageExtractor:
         value = PageExtractor.convert_BRL_currency_to_float(currency_str)
         assert value == expected_float
 
-    def test_should_open_webdriver(self):
+    def test_should_query_webdriver(self):
         import os
-        import pandas as pd
+        # import pandas as pd
         from products import Product
         ProductDatabase.clear_database()
         filename = 'test.json'
 
-        extractor = PageExtractor('magazineluiza')
-        products_list = extractor.query_webdriver("iphone")
+        extractor = PageExtractor('casasbahia')
+        products_list = extractor.query_webdriver("cadeira gamer")
         products = [Product(item_attrs) for item_attrs in products_list]
         extractor.store_products_on_json(products, filename)
         # import pdb; pdb.set_trace()
-        filtered_products = ProductDatabase.filter(price__gte=3000, price__lt=4000)
+        filtered_products = ProductDatabase.filter(price__gte=700, price__lt=1000)
         extractor.store_products_on_json(filtered_products, 'test_filtered.json')
 
         # df = pd.DataFrame({

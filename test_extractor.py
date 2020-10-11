@@ -6,7 +6,7 @@ from products import ProductDatabase, Product
 
 test_store_query_data = [
     ('magazineluiza', 'Cadeira escritorio'),
-    ('americanas', 'Cadeira escritorio'),
+    # ('americanas', 'Cadeira escritorio'),
     ('submarino', 'Cadeira escritorio'),
 ]
 
@@ -29,6 +29,8 @@ class TestPageExtractor:
     @pytest.mark.parametrize("store,query,expected_url",[
         ('magazineluiza', 'Cadeira escritorio', 'https://busca.magazineluiza.com.br/busca?q=cadeira%20escritorio'),
         ('americanas', 'Cadeira escritorio', 'https://www.americanas.com.br/busca/cadeira-escritorio'),
+        ('submarino', 'Cadeira escritorio', 'https://www.submarino.com.br/busca/cadeira-escritorio'),
+        ('casasbahia', 'Cadeira escritorio', 'https://www.casasbahia.com.br/cadeira-escritorio/b'),
     ])
     def test_should_get_search_url(self, store, query, expected_url):
         extractor = PageExtractor(store)
@@ -152,6 +154,7 @@ class TestDataRetriever:
         assert type(products_dicts[0]) == dict
     
     def test_should_get_products_from_json(self):
+        ProductDatabase.clear_database()
         products = DataRetriever.get_products_from_json('test.json')
         assert len(products) == len(ProductDatabase.products)
         assert products[0] == ProductDatabase.products[0]

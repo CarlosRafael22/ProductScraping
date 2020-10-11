@@ -34,7 +34,7 @@ class DataRetriever:
 
     @classmethod
     def get_products_from_json(cls, file_name: str) -> List[Product]:
-        ''' Dumps the list of products to a json file with file_name '''
+        ''' Return a list of products extracted from json file with file_name '''
         import json
 
         products = []
@@ -51,9 +51,10 @@ class PageExtractor:
     '''Class used to make it easier to extract data from previously known e-commerce website'''
 
     STORES_BASE_URLS = {
-        'magazineluiza': 'https://busca.magazineluiza.com.br/busca?q=',
-        # 'americanas': 'https://www.americanas.com.br/busca/',
-        'submarino': 'https://www.submarino.com.br/busca/',
+        'magazineluiza': 'https://busca.magazineluiza.com.br/busca?q={}',
+        'americanas': 'https://www.americanas.com.br/busca/{}',
+        'submarino': 'https://www.submarino.com.br/busca/{}',
+        'casasbahia': 'https://www.casasbahia.com.br/{}/b'
     }
 
     STORES_PRODUCTS_PATHS = {
@@ -100,6 +101,7 @@ class PageExtractor:
         self.store_id = store_id
 
     def query_webdriver(self, query):
+        ''' Uses the selenium driver to load the PageExtractor website after checking until it located a checkpoint element'''
         import time
         from selenium.webdriver.common.by import By
         from selenium.webdriver.support.ui import WebDriverWait
@@ -112,28 +114,28 @@ class PageExtractor:
 
         if 'magazineluiza' in self.store_id:
             try:
-                page = WebDriverWait(driver, 10).until(
+                WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.CLASS_NAME, "productShowCaseContent"))
                 )
+                # Stores the id as magazineluiza2 for the PageExtractor know that it'll need to look for especific tags related to it
                 self.store_id = 'magazineluiza2'
                 print('FOI NO PRIMEIRO')
-            except Exception as excp:
-                # import pdb; pdb.set_trace()
+            except Exception:
                 print('DEU ERRO NO PRIMEIRO')
                 try:
                     page = WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, ".neemu-products-container.nm-view-type-grid.five-products.priceapi-finish"))
                     )
+                    # Stores the id as magazineluiza for the PageExtractor know that it'll need to look for especific tags related to it
                     self.store_id = 'magazineluiza'
                     print('FOI NO SEGUNDO')
-                except Exception as excp2:
-                    # import pdb; pdb.set_trace()
+                except Exception:
                     print('DEU ERRO NO SEGUNDO')
                     try:
                         page = WebDriverWait(driver, 10).until(
                             EC.presence_of_element_located((By.ID, "main-title"))
                         )
-                    except Exception as excp3:
+                    except Exception:
                         import pdb; pdb.set_trace()
                         driver.quit()
             finally:
@@ -146,20 +148,20 @@ class PageExtractor:
                     EC.presence_of_element_located((By.CSS_SELECTOR, ".row.product-grid.no-gutters.main-grid"))
                 )
                 print('FOI NO PRIMEIRO')
-            except Exception as excp:
-                import pdb; pdb.set_trace()
+            except Exception:
                 print('DEU ERRO NO PRIMEIRO')
                 import pdb; pdb.set_trace()
                 driver.quit()
             finally:
-                # import pdb; pdb.set_trace()
+                # In these websites the images are loaded as we scroll down the page
+                # Then we had to do this to load the images as we scrollIntoView and retrieve images loaded instead of empty img tag
                 all_items = driver.find_elements_by_class_name('product-grid-item')
                 iter_idx = 0
                 while iter_idx < len(all_items):
                     driver.execute_script("arguments[0].scrollIntoView()", all_items[iter_idx])
                     iter_idx += 1
                 # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                time.sleep(5)
+                # time.sleep(5)
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
                 products = self.get_info_list_about_products(soup)
                 return products
@@ -176,22 +178,15 @@ class PageExtractor:
         # return self.STORES_PRODUCTS_PATHS[self.store_id][item_to_be_extracted]
 
     def get_search_url(self, query: str) -> str:
-        # This way each func is already executed when creating the dict
-        # {'magazineluiza': 'cadeira%20escritorio', 'americanas': 'cadeira-escritorio'}
-        # func_dict = {
-        #     'magazineluiza': query.lower().replace(' ', '%20'),
-        #     'americanas': query.lower().replace(' ', '-')
-        # }
-
-        # This way it only calls the func when its going to use it
+        ''' Returns the search url for the PageExtractor website according to STORES_BASE_URLS and query word of each site'''
         func_dict = {
             'magazineluiza': lambda query: query.lower().replace(' ', '%20'),
             'americanas': lambda query: query.lower().replace(' ', '-'),
-            'submarino': lambda query: query.lower().replace(' ', '-')
+            'submarino': lambda query: query.lower().replace(' ', '-'),
+            'casasbahia': lambda query: query.lower().replace(' ', '-')
         }
         parsed_query = func_dict[self.store_id](query)
-
-        return self.STORES_BASE_URLS[self.store_id]+parsed_query
+        return self.STORES_BASE_URLS[self.store_id].format(parsed_query)
     
     def retrieve_html_parsed_from_query(self, query: str) -> BeautifulSoup:
         ''' Retrieve the first page of the query searched on the e-commerce website parsed to BeautifulSoup object

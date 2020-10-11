@@ -52,9 +52,10 @@ class PageExtractor:
 
     STORES_BASE_URLS = {
         'magazineluiza': 'https://busca.magazineluiza.com.br/busca?q={}',
-        'americanas': 'https://www.americanas.com.br/busca/{}',
+        # 'americanas': 'https://www.americanas.com.br/busca/{}',
         'submarino': 'https://www.submarino.com.br/busca/{}',
-        'casasbahia': 'https://www.casasbahia.com.br/{}/b'
+        'casasbahia': 'https://www.casasbahia.com.br/{}/b',
+        'extra': 'https://www.extra.com.br/{}/b'
     }
 
     STORES_PRODUCTS_PATHS = {
@@ -93,6 +94,15 @@ class PageExtractor:
             'image': ('img', 'ImageUI')
         },
          'casasbahia': {
+            'search_field_id': 'inpHeaderSearch',
+            'items': ('li', 'ProductCard__Wrapper'),
+            'price': ('span', 'ProductPrice__PriceValue'),
+            'name': ('p', 'ProductCard__Title'),
+            'link': ('a', None),
+            # 'image': ('img', 'nm-product-img'),
+            'image': ('img', 'LazyLoadImg')
+        },
+        'extra': {
             'search_field_id': 'inpHeaderSearch',
             'items': ('li', 'ProductCard__Wrapper'),
             'price': ('span', 'ProductPrice__PriceValue'),
@@ -174,7 +184,7 @@ class PageExtractor:
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
                 products = self.get_info_list_about_products(soup)
                 return products
-        elif 'casasbahia' in self.store_id:
+        elif 'casasbahia' in self.store_id or 'extra' in self.store_id:
             try:
                 page = WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, ".ProductsGrid__ProductsGridWrapper-yqpqna-0.joXYON"))
@@ -207,7 +217,8 @@ class PageExtractor:
             'magazineluiza': lambda query: query.lower().replace(' ', '%20'),
             'americanas': lambda query: query.lower().replace(' ', '-'),
             'submarino': lambda query: query.lower().replace(' ', '-'),
-            'casasbahia': lambda query: query.lower().replace(' ', '-')
+            'casasbahia': lambda query: query.lower().replace(' ', '-'),
+            'extra': lambda query: query.lower().replace(' ', '-')
         }
         parsed_query = func_dict[self.store_id](query)
         return self.STORES_BASE_URLS[self.store_id].format(parsed_query)

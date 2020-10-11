@@ -9,6 +9,7 @@ test_store_query_data = [
     # ('americanas', 'Cadeira escritorio'),
     ('submarino', 'Cadeira escritorio'),
     ('casasbahia', 'Cadeira escritorio'),
+    ('extra', 'Cadeira escritorio'),
 ]
 
 class TestPageExtractor:
@@ -123,7 +124,7 @@ class TestPageExtractor:
         ProductDatabase.clear_database()
         filename = 'test.json'
 
-        extractor = PageExtractor('casasbahia')
+        extractor = PageExtractor('extra')
         products_list = extractor.query_webdriver("cadeira gamer")
         products = [Product(item_attrs) for item_attrs in products_list]
         extractor.store_products_on_json(products, filename)
@@ -147,7 +148,7 @@ class TestDataRetriever:
         # import pdb; pdb.set_trace()
         products = [Product(item_attrs) for item_attrs in products_dicts]
         DataRetriever.store_products_on_json(products, 'test.json')
-        # import pdb; pdb.set_trace()
+        import pdb; pdb.set_trace()
         filtered_products = ProductDatabase.filter(price__gte=3000, price__lt=4000)
         DataRetriever.store_products_on_json(filtered_products, 'test_filtered.json')
         assert type(products_dicts) == list

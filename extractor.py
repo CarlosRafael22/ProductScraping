@@ -91,6 +91,15 @@ class PageExtractor:
             'link': ('a', 'Link'),
             # 'image': ('img', 'nm-product-img'),
             'image': ('img', 'ImageUI')
+        },
+         'casasbahia': {
+            'search_field_id': 'inpHeaderSearch',
+            'items': ('li', 'ProductCard__Wrapper'),
+            'price': ('span', 'ProductPrice__PriceValue'),
+            'name': ('p', 'ProductCard__Title'),
+            'link': ('a', None),
+            # 'image': ('img', 'nm-product-img'),
+            'image': ('img', 'LazyLoadImg')
         }
     }
 
@@ -209,27 +218,26 @@ class PageExtractor:
         #     import pdb; pdb.set_trace()
 
         name_tag, name_class = self.get_tag_and_class_for_info('name')
-        # name_h2 = item.find(name_tag, class_=name_class)
         regex = re.compile('.*'+name_class+'.*')
         name_h2 = item.find(name_tag, { 'class': regex })
-
-        link_tag, link_class = self.get_tag_and_class_for_info('link')
-        # link = item.find(link_tag, class_=link_class)
-        regex = re.compile('.*'+link_class+'.*')
-        link = item.find(link_tag, { 'class': regex })
 
         price_tag, price_class = self.get_tag_and_class_for_info('price')
         regex = re.compile('.*'+price_class+'.*')
         price_str = item.find(price_tag, { 'class': regex })
-        # name_h2 = item.find("h2", class_="TitleUI-bwhjk3-15 khKJTM TitleH2-sc-1wh9e1x-1 gYIWNc")
-        # name_h2 = item.select(name_extractor)
-        # name_h2 = name_h2[0] if len(name_h2) else None
-        # import pdb; pdb.set_trace()
 
         name = name_h2.get_text().strip() if name_h2 else 'SEM NOME'
         # price_str = price_span.get_text() if price_span else 'SEM PRECO'
-        link_url = link.get('href') if link else 'SEM LINK'
         image_url = image.get('src') if image else 'SEM IMAGEM'
+
+        link_tag, link_class = self.get_tag_and_class_for_info('link')
+        # If there's no class associated then we look for links with the item's title as item's name. All websites are like this
+        if link_class:
+            # link = item.find(link_tag, class_=link_class)
+            regex = re.compile('.*'+link_class+'.*')
+            link = item.find(link_tag, { 'class': regex })
+        else:
+            link = item.find('a', {'title':name})
+        link_url = link.get('href') if link else 'SEM LINK'
 
         if price_str:
             # Value is received like this: 'R$ 1.498,00'
@@ -247,13 +255,15 @@ class PageExtractor:
             'image_url': image_url,
             'store': self.store_id
         }
-        # Product(info_dict)
+
         return info_dict
 
     def get_items_list_from_parsed_html(self, parsed_html: BeautifulSoup) -> element.ResultSet:
         ''' Returns a list with all the items to be extracted from the given parsed html page '''
         tag, html_class = self.get_tag_and_class_for_info('items')
-        grid_items = parsed_html.find_all(tag, class_=html_class)
+        # grid_items = parsed_html.find_all(tag, class_=html_class)
+        regex = re.compile('.*'+html_class+'.*')
+        grid_items = parsed_html.find_all(tag, { 'class': regex })
         return grid_items
 
     def get_info_list_about_products(self, parsed_html: BeautifulSoup) -> list:
@@ -261,6 +271,7 @@ class PageExtractor:
         grid_items = self.get_items_list_from_parsed_html(parsed_html)
         items_list = []
         print(len(grid_items))
+        # import pdb; pdb.set_trace()
 
         for item in grid_items:
             info_dict = self.get_info_dict_for_product(item)

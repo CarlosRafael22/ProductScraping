@@ -12,10 +12,24 @@ PATH = 'C:\\Users\\carlo\\Documents\\ESTUDOS\\chromedriver.exe'
 class DataRetriever:
     ''' Class that uses multiple PageExtractors to retrieve data queried from different websites '''
 
-    @classmethod
-    def query_for(cls, query: str) -> List:
+    STORES_BASE_URLS = {
+        'magazineluiza': 'https://busca.magazineluiza.com.br/busca?q={}',
+        # 'americanas': 'https://www.americanas.com.br/busca/{}',
+        'submarino': 'https://www.submarino.com.br/busca/{}',
+        'casasbahia': 'https://www.casasbahia.com.br/{}/b',
+        'extra': 'https://www.extra.com.br/{}/b'
+    }
+
+    def __init__(self, stores_list: List[str] = None):
+        if stores_list:
+            self.stores_ids_list = stores_list
+        else:
+            self.stores_ids_list = [*self.STORES_BASE_URLS]
+
+    def query_for(self, query: str) -> List:
         # Execute this query in as many websites there are in STORES_BASE_URLS
-        websites_to_query = [*PageExtractor.STORES_BASE_URLS]
+        # websites_to_query = [*PageExtractor.STORES_BASE_URLS]
+        websites_to_query = self.stores_ids_list
         objects_retrieved = []
         # import pdb; pdb.set_trace()
         for website in websites_to_query:

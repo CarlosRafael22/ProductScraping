@@ -143,12 +143,24 @@ class TestPageExtractor:
 
 
 class TestDataRetriever:
+    @pytest.mark.parametrize("stores_ids", [
+        (['submarino', 'magazineluiza']),
+        (None)
+    ])
+    def test_should_init_with_stores_ids_list(self, stores_ids):
+        retriever = DataRetriever(stores_ids)
+        if stores_ids:
+            assert retriever.stores_ids_list == stores_ids
+        else:
+            assert retriever.stores_ids_list == [*retriever.STORES_BASE_URLS]
+
     def test_should_query_for(self):
-        products_dicts = DataRetriever.query_for('iphone')
+        retriever = DataRetriever(['submarino'])
+        products_dicts = retriever.query_for('iphone')
         # import pdb; pdb.set_trace()
         products = [Product(item_attrs) for item_attrs in products_dicts]
         DataRetriever.store_products_on_json(products, 'test.json')
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         filtered_products = ProductDatabase.filter(price__gte=3000, price__lt=4000)
         DataRetriever.store_products_on_json(filtered_products, 'test_filtered.json')
         assert type(products_dicts) == list

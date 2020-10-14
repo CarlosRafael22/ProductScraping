@@ -14,7 +14,7 @@ class DataRetriever:
 
     STORES_BASE_URLS = {
         'magazineluiza': 'https://busca.magazineluiza.com.br/busca?q={}',
-        # 'americanas': 'https://www.americanas.com.br/busca/{}',
+        'americanas': 'https://www.americanas.com.br/busca/{}',
         'submarino': 'https://www.submarino.com.br/busca/{}',
         'casasbahia': 'https://www.casasbahia.com.br/{}/b',
         'extra': 'https://www.extra.com.br/{}/b'
@@ -26,7 +26,8 @@ class DataRetriever:
         else:
             self.stores_ids_list = [*self.STORES_BASE_URLS]
 
-    def query_for(self, query: str) -> List:
+    def query_for(self, query: str) -> List[dict]:
+        ''' Returns a list of products dictionaries got from querying each website on DataReceiver's stores_ids_list '''
         # Execute this query in as many websites there are in STORES_BASE_URLS
         # websites_to_query = [*PageExtractor.STORES_BASE_URLS]
         websites_to_query = self.stores_ids_list
@@ -60,13 +61,12 @@ class DataRetriever:
         return products
 
 
-
 class PageExtractor:
     '''Class used to make it easier to extract data from previously known e-commerce website'''
 
     STORES_BASE_URLS = {
         'magazineluiza': 'https://busca.magazineluiza.com.br/busca?q={}',
-        # 'americanas': 'https://www.americanas.com.br/busca/{}',
+        'americanas': 'https://www.americanas.com.br/busca/{}',
         'submarino': 'https://www.submarino.com.br/busca/{}',
         'casasbahia': 'https://www.casasbahia.com.br/{}/b',
         'extra': 'https://www.extra.com.br/{}/b'
@@ -133,8 +133,9 @@ class PageExtractor:
     def __init__(self, store_id):
         self.store_id = store_id
 
-    def query_webdriver(self, query):
-        ''' Uses the selenium driver to load the PageExtractor website after checking until it located a checkpoint element'''
+    def query_webdriver(self, query: str) -> List[dict]:
+        ''' Returns list of products dictionaries got from the parsed html of the page.
+            Uses the selenium driver to load the PageExtractor website after checking until it located a checkpoint element and then BeautifulSoup it and get_info_list_about_products'''
         import time
         from selenium.webdriver.common.by import By
         from selenium.webdriver.support.ui import WebDriverWait
@@ -215,6 +216,7 @@ class PageExtractor:
                 return products
     
     def get_tag_and_class_for_info(self, item_to_be_extracted: str) -> Tuple[str,str]:
+        ''' Returns a tuple with html tag and css class the item_to_be_extracted refers to '''
         paths = self.STORES_PRODUCTS_PATHS.get(self.store_id, None)
         if not paths:
             return (None, None)
@@ -306,7 +308,7 @@ class PageExtractor:
         grid_items = parsed_html.find_all(tag, { 'class': regex })
         return grid_items
 
-    def get_info_list_about_products(self, parsed_html: BeautifulSoup) -> list:
+    def get_info_list_about_products(self, parsed_html: BeautifulSoup) -> List[dict]:
         ''' Returns a list with all the information about the products from the given parsed html page '''
         grid_items = self.get_items_list_from_parsed_html(parsed_html)
         items_list = []
@@ -320,6 +322,7 @@ class PageExtractor:
     
     @staticmethod
     def convert_BRL_currency_to_float(currency_value: str) -> float:
+        ''' Returns float value of the price after handling the string '''
         # Value is received like this: 'R$ 1.498,00' 'R$ 538,90 à vista' 'Desconto de R$ 1,90'
         currency_value = currency_value.strip().split('R$')[1]
         float_value = currency_value.strip().replace('.', '/').replace(',', '.').replace('/', '')

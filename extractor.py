@@ -198,7 +198,7 @@ class PageExtractor:
                     driver.execute_script("arguments[0].scrollIntoView()", all_items[iter_idx])
                     iter_idx += 1
                 # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                # time.sleep(5)
+                time.sleep(5)
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
                 products = self.get_info_list_about_products(soup)
                 return products

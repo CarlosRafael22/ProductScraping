@@ -7,7 +7,8 @@ def create_test_product():
         'price_str': 'R$ 999,99',
         'price': 999.99,
         'link': '/produto/1292680481?pfm_carac=cadeira%20gamer&pfm_index=19&pfm_page=search&pfm_pos=grid&pfm_type=search_page',
-        'image_url': None
+        'image_url': None,
+        'store': 'americanas'
     }
     product = Product(props)
     return product
@@ -20,7 +21,8 @@ class TestProduct:
             'price_str': 'R$ 999,99',
             'price': 999.99,
             'link': '/produto/1292680481?pfm_carac=cadeira%20gamer&pfm_index=19&pfm_page=search&pfm_pos=grid&pfm_type=search_page',
-            'image_url': None
+            'image_url': None,
+            'store': 'americanas'
         }
         product = Product(props)
         assert product.name == props['name']
@@ -28,19 +30,27 @@ class TestProduct:
         assert product.price == props['price']
         assert product.link == props['link']
         assert product.image_url == props['image_url']
-        assert product.store == None
+        assert product.store == props['store']
 
 
 class TestProductDatabase:
     def test_should_add_product(self):
         ProductDatabase.clear_database()
+        previous_total = ProductDatabase.get_products_total()
+        # Inside the Product() init method we make a ProductDatabase.add_product(product)
+        # so when creating a new Product we already test this
+        product = create_test_product()
+        total = ProductDatabase.get_products_total()
+        assert total == previous_total + 1
+        assert ProductDatabase.products[0] == product
+
+    def test_should_not_add_product_due_to_duplication(self):
         product = create_test_product()
         # import pdb; pdb.set_trace()
         previous_total = ProductDatabase.get_products_total()
-
         ProductDatabase.add_product(product)
         total = ProductDatabase.get_products_total()
-        assert total == previous_total + 1
+        assert total == previous_total
     
     # def test_should_filter_from_inheritance(self):
     #     product = create_test_product()

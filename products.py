@@ -32,7 +32,10 @@ class ProductDatabase(Database):
 
     @classmethod
     def add_product(cls, product: Product):
-        cls.products.append(product)
+        # To avoid insert products already inserted we check some conditions beforehand to not have duplications
+        already_inserted_products = cls.filter(price=product.price, store=product.store, name=product.name)
+        if len(already_inserted_products) == 0:
+            cls.products.append(product)
     
     @classmethod
     def filter(cls, **kwargs):

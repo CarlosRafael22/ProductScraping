@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import Tuple, List, Union
 import requests
 import re
 from selenium import webdriver
@@ -40,12 +40,15 @@ class DataRetriever:
         return objects_retrieved
 
     @classmethod
-    def store_products_on_json(cls, products, file_name):
-        ''' Dumps the list of products to a json file with file_name '''
+    def store_products_on_json(cls, products: Union[List[Product], List[dict]], file_name: str) -> None:
+        ''' Dumps the list of products objects or products dictionaries to a json file with file_name '''
         import json
 
         with open(file_name, 'w') as file:
-            json.dump([product.__dict__ for product in products], file, indent=4)
+            if type(products[0]) == dict:
+                json.dump([product_dict for product_dict in products], file, indent=4)
+            else:
+                json.dump([product.__dict__ for product in products], file, indent=4)
 
     @classmethod
     def get_products_from_json(cls, file_name: str) -> List[Product]:

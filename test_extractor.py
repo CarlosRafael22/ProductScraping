@@ -171,3 +171,21 @@ class TestDataRetriever:
         products = DataRetriever.get_products_from_json('test.json')
         assert len(products) == len(ProductDatabase.products)
         assert products[0] == ProductDatabase.products[0]
+    
+    def test_should_store_products_on_json(self):
+        import os
+        retriever = DataRetriever(['submarino'])
+        products_dicts = retriever.query_for('iphone')
+
+        file_name1 = 'test2.json'
+        if os.path.exists(file_name1):
+            os.remove(file_name1)
+        DataRetriever.store_products_on_json(products_dicts, file_name1)
+        assert os.path.exists(file_name1) == True
+
+        file_name2 = 'test3.json'
+        if os.path.exists(file_name2):
+            os.remove(file_name2)
+        products = [Product(item_attrs) for item_attrs in products_dicts]
+        DataRetriever.store_products_on_json(products, file_name2)
+        assert os.path.exists(file_name2) == True

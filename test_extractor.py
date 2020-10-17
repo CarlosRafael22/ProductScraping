@@ -5,11 +5,11 @@ from products import ProductDatabase, Product
 
 
 test_store_query_data = [
-    ('magazineluiza', 'Cadeira escritorio'),
-    # ('americanas', 'Cadeira escritorio'),
-    ('submarino', 'Cadeira escritorio'),
-    ('casasbahia', 'Cadeira escritorio'),
-    ('extra', 'Cadeira escritorio'),
+    ('magazineluiza', 'Goblet of fire'),
+    # ('americanas', 'Goblet of fire'),
+    ('submarino', 'Goblet of fire'),
+    ('casasbahia', 'Goblet of fire'),
+    ('extra', 'Goblet of fire'),
 ]
 
 class TestPageExtractor:
@@ -73,8 +73,8 @@ class TestPageExtractor:
         parsed_html = extractor.retrieve_html_parsed_from_query(query)
         items_list = extractor.get_info_list_about_products(parsed_html)
 
-        # import pdb; pdb.set_trace()
         assert type(items_list) == list
+        assert type(items_list[0]) == dict
         # assert len(items_list) == ProductDatabase.get_products_total() - previous_product_total
         # assert type(parsed_list[0]) == BeautifulSoup
 
@@ -86,7 +86,8 @@ class TestPageExtractor:
         products_list = extractor.retrieve_products_from_query(query)
 
         assert type(products_list) == list
-        assert len(products_list) == ProductDatabase.get_products_total()
+        # Cannot check for equal because there might be items repited which were not inserted in the database
+        assert len(products_list) >= ProductDatabase.get_products_total()
         # assert len(items_list) == ProductDatabase.get_products_total() - previous_product_total
         # assert type(parsed_list[0]) == BeautifulSoup
 
@@ -102,7 +103,8 @@ class TestPageExtractor:
 
         # import pdb; pdb.set_trace()
         assert os.path.exists(filename) == True
-        assert len(products_list) == ProductDatabase.get_products_total()
+        # Cannot check for equal because there might be items repited which were not inserted in the database
+        assert len(products_list) >= ProductDatabase.get_products_total()
         # assert len(items_list) == ProductDatabase.get_products_total() - previous_product_total
         # assert type(parsed_list[0]) == BeautifulSoup
 
@@ -124,8 +126,8 @@ class TestPageExtractor:
         ProductDatabase.clear_database()
         filename = 'test.json'
 
-        extractor = PageExtractor('extra')
-        products_list = extractor.query_webdriver("cadeira gamer")
+        extractor = PageExtractor('submarino')
+        products_list = extractor.query_webdriver("goblet of fire")
         products = [Product(item_attrs) for item_attrs in products_list]
         extractor.store_products_on_json(products, filename)
         # import pdb; pdb.set_trace()
@@ -137,9 +139,10 @@ class TestPageExtractor:
         #     'price': [prod.price for prod in filtered_products]
         # })
 
-        # import pdb; pdb.set_trace()
         assert os.path.exists(filename) == True
-        assert len(products_list) == ProductDatabase.get_products_total()
+        # We cant check it like this since the add_product on ProductDatabase checks whether the product was already inserted
+        # assert len(products_list) == ProductDatabase.get_products_total()
+        assert ProductDatabase.get_products_total() != 0
 
 
 class TestDataRetriever:

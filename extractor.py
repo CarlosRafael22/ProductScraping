@@ -132,6 +132,9 @@ class PageExtractor:
 
     # Will store the BeautifulSoup parsed from the search query when calling retrieve_html_parsed_from_query
     parsed_html = None
+    # Will store the current query then we can check whether the item retrieved from the parsed html has it
+    # This way we can filter out some items which are ads or recommendations for other products
+    current_query = None
 
     def __init__(self, store_id):
         self.store_id = store_id
@@ -148,6 +151,9 @@ class PageExtractor:
         driver.get(self.get_search_url(query))
         # search = driver.find_element_by_id('inpHeaderSearch')
         # search.send_keys(query + Keys.RETURN)
+
+        # Saving to filter out items not containing the query search for
+        self.current_query = query
 
         if 'magazineluiza' in self.store_id:
             try:
@@ -291,6 +297,23 @@ class PageExtractor:
         else:
             price_str = 'SEM PRECO'
             price = None
+        
+        # Filtering items which are not related to the query but were extracted from the page
+        # if self.current_query.lower() in name.lower():
+        #     info_dict = {
+        #         'name': name,
+        #         'price_str': price_str,
+        #         'price': price,
+        #         'link': link_url,
+        #         'image_url': image_url,
+        #         'store': self.store_id
+        #     }
+        # else:
+        #     info_dict = None
+        
+        # Check if its extracting item when querying
+        if self.current_query and self.current_query not in name.lower():
+            return None
 
         info_dict = {
             'name': name,
@@ -320,7 +343,8 @@ class PageExtractor:
 
         for item in grid_items:
             info_dict = self.get_info_dict_for_product(item)
-            items_list.append(info_dict)
+            if info_dict is not None:
+                items_list.append(info_dict)
         return items_list
     
     @staticmethod
